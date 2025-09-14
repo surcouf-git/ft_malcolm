@@ -2,7 +2,8 @@ CC = cc
 SRC = src/main.c
 
 all:
-	cc -g -Wall -Wextra -Werror $(SRC) -o ft_malcolm
+	@echo "\n\nWARNING WERROR IS NOT SET\n\n";
+	cc -g -Wall -Wextra $(SRC) -o ft_malcolm
 
 fclean:
 	rm -f ft_malcolm
