@@ -9,28 +9,15 @@
 #include <netpacket/packet.h>
 #include <net/ethernet.h>
 
+#include "structs.h"
+#include "def.h"
+
 void sig_handler(int) {
 	printf("\nbye\n");
 	exit(0);
 }
 
-typedef struct arp_s {
-	uint16_t hardware_type;
-	uint16_t protocol_type;
-	unsigned char vide[38];
-} arp_t;
-
-typedef struct frame_s {
-	unsigned char destination[6];
-	unsigned char source[6];
-	uint16_t length_type;
-	arp_t arp;
-	int checksum;
-} frame_t;
-
-int main() {
-
-	printf("%ld\n", sizeof(arp_t));
+int test_main() {
 	struct sigaction action;
 	action.sa_handler = &sig_handler;
 
@@ -49,7 +36,7 @@ int main() {
 	int n = 0;
 	while ((n = recvfrom(sock, buffer, 10000, 0, NULL, NULL)) > 0) {
 		buffer[n] = 0;
-		frame_t *f = (frame_t *)buffer;
+		ethframe_t *f = (ethframe_t *)buffer;
 		for (int i = 0; i < 6; i++) {
 			printf("%X ", f->destination[i]);
 		}
@@ -63,5 +50,19 @@ int main() {
 	}
 	printf("Process exited with: %d bytes reads\n", n);
 	free(buffer);
+}
+
+int main(int argc, char **argv) {
+	//if (argc < 5) {
+	//	fprintf(stderr, EARG);
+	//	return (EXIT_FAILURE);
+	//}
+
+	prog_data_t program_data;
+
+	if (!init_program(argc, argv, &program_data))
+		return (EXIT_FAILURE);
+
+	test_main();
 	return (0);
 }
