@@ -1,6 +1,8 @@
+#include <stdio.h>
+
+#include "def.h"
 #include "global_utils.h"
 #include "structs.h"
-#include <stdio.h>
 
 int ft_strlen(char *s) {
 	if (!s) return (0);
@@ -24,4 +26,10 @@ void bzero_prog_data(prog_data_t *program_data) {
 		set[i] = 0;
 		i++;
 	}
+}
+
+int is_digit(char c) {
+	if (c >= '0' && c <= '9')
+		return (SUCCESS);
+	return (FAILURE);
 }

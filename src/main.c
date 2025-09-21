@@ -25,7 +25,6 @@ int test_main() {
 	sigaction(SIGINT, &action, NULL);
 
 	uint16_t protocol = htons(ETH_P_ALL);
-	printf("Prototcol: %x(%x)\n", protocol, ntohs(ETH_P_ALL));
 	int sock = socket(AF_PACKET, SOCK_RAW, protocol);
 	if (sock == -1) {
 		perror("socket()");
@@ -38,13 +37,18 @@ int test_main() {
 	while ((n = recvfrom(sock, buffer, 10000, 0, NULL, NULL)) > 0) {
 		buffer[n] = 0;
 		ethframe_t *f = (ethframe_t *)buffer;
+		printf("SOURCE -> ");
+		for (int i = 0; i < 6; i++) {
+			printf("%X ", f->source[i]);
+		}
+		printf("DESTINATION -> ");
 		for (int i = 0; i < 6; i++) {
 			printf("%X ", f->destination[i]);
 		}
 		f->length_type = ntohs(f->length_type);
 		if (f->length_type == ETH_P_ARP) {
 			arp_t *arp = &f->arp;
-			printf("HW Type: %d | %d", arp->hardware_type, arp->protocol_type);
+			printf("HW Type: %x | %x", arp->hardware_type, arp->protocol_type);
 		}
 		printf("\n");
 		memset(buffer, 0, 10000);

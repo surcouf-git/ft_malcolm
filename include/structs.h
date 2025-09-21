@@ -17,15 +17,15 @@ typedef struct ethframe_s {
 } ethframe_t;
 
 typedef struct prog_opts_s {
-	int verbose;
-	int indepth;
+	unsigned verbose;
+	unsigned indepth;
 } prog_opts_t;
 
 typedef struct prog_args_s {
-	char source_ip[4];
-	char source_mac[6];
-	char target_ip[4];
-	char target_mac[6];
+	unsigned char src_ip[4];
+	unsigned long dec_src_mac;
+	unsigned char trgt_ip[4];
+	unsigned long dec_trgt_mac;
 } prog_args_t;
 
 typedef struct prog_data_s {

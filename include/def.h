@@ -3,6 +3,9 @@
 // == Input
 #define MACLEN 17
 #define IS_DELIMITER i % 3 == 2
+#define MIN_CHAR_VAL 10
+#define MAX_CHAR_RANGE 6
+#define BASE_16 16
 // ====================
 
 // == Errors 
@@ -20,3 +23,6 @@
 
 #define VERBOSE 1
 // ====================
+
+// == Verbose 
+#define MACFORM "Successfully formatted MAC addresses:\nSOURCE -> HEX: [%lx], DEC: [%ld]\nTARGET -> HEX: [%lx], DEC: [%ld]\n"

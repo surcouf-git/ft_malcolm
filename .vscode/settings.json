@@ -14,7 +14,8 @@
 		"cstdint": "c",
 		"stdint-gcc.h": "c",
 		"structs.h": "c",
-		"def.h": "c"
+		"def.h": "c",
+		"random": "c"
 	},
 	"C_Cpp.errorSquiggles": "disabled"
 }
