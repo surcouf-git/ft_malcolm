@@ -6,8 +6,14 @@
 #include "def.h"
 
 int is_ip_valid(char *src_ip, char *trgt_ip, prog_data_t *program_data) {
-	(void)src_ip;
-	(void)trgt_ip;
+	if (ft_strlen(src_ip) < IP_MIN_LEN || ft_strlen(src_ip) > IP_MAX_LEN) {
+		fprintf(stderr, EBADIP, src_ip);
+		return (FAILURE);
+	}
+	if (ft_strlen(trgt_ip) < IP_MIN_LEN || ft_strlen(trgt_ip) > IP_MAX_LEN) {
+		fprintf(stderr, EBADIP, trgt_ip);
+		return (FAILURE);
+	}
 	(void)program_data;
 	return(SUCCESS);
 }
@@ -45,7 +51,7 @@ int is_mac_valid(char *src_mac, char *trgt_mac, prog_data_t *program_data) {
 		}
 		i++;
 	}
-	if (i != MACLEN) {
+	if (i != MAC_LEN) {
 		if (!trgt_mac[i])
 			fprintf(stderr, EBADMAC, trgt_mac);
 		else
@@ -118,7 +124,7 @@ unsigned long ascii_to_hex(char *mac) {
 		start++;
 	}
 
-	for (int i = MACLEN - 1; i >= 0; i--) {
+	for (int i = MAC_LEN - 1; i >= 0; i--) {
 		char c = mac[i];
 
 		if (c == ':' || c == '-')
