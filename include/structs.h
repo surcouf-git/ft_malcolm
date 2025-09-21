@@ -17,7 +17,6 @@ typedef struct ethframe_s {
 } ethframe_t;
 
 typedef struct prog_opts_s {
-	int has_opts;
 	int verbose;
 	int indepth;
 } prog_opts_t;

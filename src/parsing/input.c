@@ -1,53 +1,95 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "global_utils.h"
 #include "structs.h"
 #include "def.h"
 
-void bzero_prog_data(prog_data_t *program_data) {
-	size_t i = 0;
-	char *set = (char *)program_data;
+int is_ip_valid(char *src_ip, char *trgt_ip, prog_data_t *program_data) {
+	(void)src_ip;
+	(void)trgt_ip;
+	(void)program_data;
+	return(SUCCESS);
+}
 
-	while (i < sizeof(*program_data)) {
-		set[i] = 0;
+int is_delimiter_valid(char *mac, size_t pos) {
+	if (mac[pos] != '-' && mac[pos] != ':') {
+		fprintf(stderr, EBADMAC, mac);
+		return (FAILURE);
+	}
+	return(SUCCESS);
+}
+
+int is_char_valid(char *mac, size_t pos) {
+	char c = mac[pos];
+
+	if (c >= '0' && c <= '9')
+		return (SUCCESS);
+	else if ((c < 'a' || c > 'f') && (c < 'A' || c > 'F')) {
+		fprintf(stderr, EBADMAC, mac);
+		return (FAILURE);
+	}
+	return (SUCCESS);
+}
+
+int is_mac_valid(char *src_mac, char *trgt_mac, prog_data_t *program_data) {
+	size_t i = 0;
+
+	while (trgt_mac[i] && src_mac[i]) {
+		if (IS_DELIMITER) {
+			if (!is_delimiter_valid(src_mac, i) || !is_delimiter_valid(trgt_mac, i))
+				return (FAILURE);
+		} else {
+			if (!is_char_valid(src_mac, i) || !is_char_valid(trgt_mac, i))
+				return (FAILURE);
+		}
 		i++;
 	}
-}
-
-int is_ip_valid(char *ip1, char *ip2, prog_data_t *program_data) {
-
-}
-
-int is_mac_valid(char *mac1, char *mac2, prog_data_t *program_data) {
-
+	if (i != MACLEN) {
+		if (!trgt_mac[i])
+			fprintf(stderr, EBADMAC, trgt_mac);
+		else
+			fprintf(stderr, EBADMAC, src_mac);
+		return (FAILURE);
+	}
+	(void)program_data;
+	return(SUCCESS);
 }
 
 int is_valid_input(char **argv, prog_data_t *program_data) {
-
 	if (!is_ip_valid(argv[1], argv[3], program_data))
 		return (FAILURE);
 	if (!is_mac_valid(argv[2], argv[4], program_data))
 		return (FAILURE);
+	return (SUCCESS);
 }
 
 int is_valid_opt(char *s) {
-	if (ft_strlen(s) != 2)
+	if (ft_strlen(s) != 2) {
+		fprintf(stderr, EOPT, s);
 		return (FAILURE);
+	}
 
 	if (s[0] != '-') {
-		fprintf(stderr, "invalid option -> {%s}, ignoring\n", s);
+		fprintf(stderr, EOPT, s);
 		return(FAILURE);
 	}
 
 	int i = 0;
 	while (VALID_OPTS[i]) {
-		if ()
+		if (s[1] == VALID_OPTS[i])
+			return (SUCCESS);
+		i++;
 	}
-	return(SUCCESS);
+	fprintf(stderr, EOPT, s);
+	return(FAILURE);
 }
 
-void add_opt(char *c) {
-
+void add_opt(char *c, prog_data_t *program_data) {
+	if (c[1] == 'v')
+		program_data->options.verbose = 1;
+	if (c[1] == 'i')
+		program_data->options.indepth = 1;
 }
 
 int are_valid_opts(int argc, char **argv, prog_data_t *program_data) {
@@ -57,8 +99,10 @@ int are_valid_opts(int argc, char **argv, prog_data_t *program_data) {
 	int i = 5;
 	while (i < argc) {
 		if (is_valid_opt(argv[i]))
-			add_opt(argv[i]);
+			add_opt(argv[i], program_data);
+		i++;
 	}
+	return (SUCCESS);
 }
 
 int parse_input(int argc, char **argv, prog_data_t *program_data) {
@@ -66,6 +110,7 @@ int parse_input(int argc, char **argv, prog_data_t *program_data) {
 		return (FAILURE);
 	if (!is_valid_input(argv, program_data))
 		return (FAILURE);
+	return (SUCCESS);
 }
 
 int init_program(int argc, char **argv, prog_data_t *program_data) {

@@ -12,7 +12,7 @@ DEF=\e[0m
 
 all:
 	@echo "${RED}\nWARNING WERROR IS NOT SET AND -w IS SET${DEF}\n";
-	gcc -g -Wall -Wextra -w ${INCLUDES} $(UTILS) $(SRC) -o ft_malcolm
+	gcc -g -Wall -Wextra  ${INCLUDES} $(UTILS) $(SRC) -o ft_malcolm
 
 fclean:
 	rm -f ft_malcolm

@@ -11,6 +11,7 @@
 
 #include "structs.h"
 #include "def.h"
+#include "input.h"
 
 void sig_handler(int) {
 	printf("\nbye\n");
@@ -50,6 +51,7 @@ int test_main() {
 	}
 	printf("Process exited with: %d bytes reads\n", n);
 	free(buffer);
+	return (0);
 }
 
 int main(int argc, char **argv) {
@@ -63,6 +65,6 @@ int main(int argc, char **argv) {
 	if (!init_program(argc, argv, &program_data))
 		return (EXIT_FAILURE);
 
-	test_main();
+	//test_main();
 	return (0);
 }
