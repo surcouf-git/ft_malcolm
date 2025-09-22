@@ -208,7 +208,46 @@ int convert_possible_hostname(char *src_ip, char *trgt_ip, prog_args_t *args) {
 	return (SUCCESS);
 }
 
-int is_private_address(char **argv, prog_args_t *args) {
+int are_private_ips(const char *src_ip, const char *trgt_ip) {
+	int src_is_valid = 0, trgt_is_valid = 0, i = 0;
+	const int max_classes = 3;
+	const char *classes[3] = { CLASS_A, CLASS_B, CLASS_C };
+
+	while (i < max_classes) {
+		if (ft_classcmp(classes[i], src_ip))
+			src_is_valid = 1;
+		if (ft_classcmp(classes[i], trgt_ip))
+			trgt_is_valid = 1;
+		i++;
+	}
+	if (!src_is_valid) {
+		printf((ft_strcmp(src_ip, LOCALHOST) ? WHYLOCAL : WHYPUBLIC), src_ip);
+		return (FAILURE);
+	}
+	if (!trgt_is_valid) {
+		printf((ft_strcmp(trgt_ip, LOCALHOST) ? WHYLOCAL : WHYPUBLIC), trgt_ip);
+		return (FAILURE);
+	}
+	return (SUCCESS);
+}
+
+// TODO 172.16 a un masque de 240... donc la deuxieme partie n'est pas forcement '16'
+
+int is_valid_address(char **argv, prog_data_t *program_data) {
+	const char *src_ip = program_data->args.src_ipv4;
+	const char *trgt_ip = program_data->args.trgt_ipv4;
+
+	if (program_data->options.verbose) {
+
+		if (!ft_strcmp(src_ip, argv[1]))
+			printf(HOSTTOIPSRC, argv[1], src_ip);
+
+		if (!ft_strcmp(trgt_ip, argv[3]))
+			printf(HOSTTOIPTRGT, argv[3], trgt_ip);
+	}
+	if (!are_private_ips(src_ip, trgt_ip)) {
+		return (FAILURE);
+	}
 	return(SUCCESS);
 }
 
@@ -222,10 +261,11 @@ int format_ip_addresses(char **argv, prog_data_t *program_data) {
 	if (!convert_possible_hostname(raw_src_ip, raw_trgt_ip, &(program_data->args)))
 		return (FAILURE);
 
-	if (!is_private_address(argv, &(program_data->args)))
+	if (!is_valid_address(argv, program_data))
 		return (FAILURE);
 
 	if (program_data->options.verbose) {
+		printf(VALID_IPS);
 		printf(IPFORM, 
 			program_data->args.src_ipv4, program_data->args.dec_src_ip, 
 			program_data->args.trgt_ipv4, program_data->args.dec_trgt_ip);

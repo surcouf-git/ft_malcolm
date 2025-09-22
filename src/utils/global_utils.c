@@ -4,7 +4,7 @@
 #include "global_utils.h"
 #include "structs.h"
 
-int ft_strlen(char *s) {
+int ft_strlen(const char *s) {
 	if (!s) return (0);
 
 	int len = 0;
@@ -43,4 +43,26 @@ void ft_strcpy(char *s1, char *s2) {
 		s1++;
 		s2++;
 	}
+}
+
+int ft_strcmp(const char *s1, const char *s2) {
+	if (!s1 || !s2)
+		return (0);
+
+	for (int i = 0; s1[i] && s2[i]; i++) {
+		if (s1[i] != s2[i])
+			return (0);
+	}
+	return (ft_strlen(s1) == ft_strlen(s2));
+}
+
+int ft_classcmp(const char *s1, const char *s2) {
+	int i = 0;
+
+	while (s1[i]) {
+		if (s2[i] != s1[i])
+			return (0);
+		i++;
+	}
+	return (1);
 }

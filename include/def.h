@@ -7,6 +7,11 @@
 #define MIN_CHAR_VAL 10
 #define MAX_CHAR_RANGE 6
 #define BASE_16 16
+
+#define CLASS_A "10."
+#define CLASS_B "172.16."
+#define CLASS_C "192.168."
+#define LOCALHOST "127.0.0.1"
 // ====================
 
 // == Errors ==
@@ -29,7 +34,12 @@
 
 // == Verbose ==
 #define STARTMACFORM "formating MAC addresses..\n"
-#define MACFORM "\t | SOURCE -> HEX: [%lx]; DEC: [%ld]\n\t | TARGET -> HEX: [%lx]; DEC: [%ld]\ndone !\n"
+#define MACFORM "\t | SOURCE -> HEX: [%lx]; DEC: [%ld]\n\t | TARGET -> HEX: [%lx]; DEC: [%ld]\ndone !\n\n"
 #define STARTIPFORM "formating IP addresses..\n"
-#define IPFORM "\t | SOURCE -> ASCII: [%s]; DEC: [%ld]\n\t | TARGET -> ASCII: [%s]; DEC: [%ld]\ndone !\n"
+#define HOSTTOIPSRC "hostname resolution found for : \n\t | SOURCE -> HOSTNAME: [%s]; IP: [%s]\n"
+#define HOSTTOIPTRGT "hostname resolution found for : \n\t | TARGET -> HOSTNAME: [%s]; IP: [%s]\n"
+#define VALID_IPS "valid IPS: \n"
+#define WHYPUBLIC "%s ? why would you do this on a public addess ? exiting\n"
+#define WHYLOCAL "%s ? why would you do this on localhost ? exiting\n"
+#define IPFORM "\t | SOURCE -> ASCII: [%s]; DEC: [%ld]\n\t | TARGET -> ASCII: [%s]; DEC: [%ld]\ndone !\n\n"
 // ====================
