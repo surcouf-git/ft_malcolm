@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "def.h"
+
 typedef struct arp_s {
 	uint16_t hardware_type;
 	uint16_t protocol_type;
@@ -22,9 +24,13 @@ typedef struct prog_opts_s {
 } prog_opts_t;
 
 typedef struct prog_args_s {
-	unsigned char src_ip[4];
+	char src_ipv4[IP_MAX_LEN];
+	char src_ipv6[IP_MAX_LEN];
+	unsigned long dec_src_ip;
 	unsigned long dec_src_mac;
-	unsigned char trgt_ip[4];
+	char trgt_ipv4[IP_MAX_LEN];
+	char trgt_ipv6[IP_MAX_LEN];
+	unsigned long dec_trgt_ip;
 	unsigned long dec_trgt_mac;
 } prog_args_t;
 

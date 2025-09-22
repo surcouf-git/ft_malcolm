@@ -1,22 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 #include "global_utils.h"
 #include "structs.h"
 #include "def.h"
-
-int is_ip_valid(char *src_ip, char *trgt_ip, prog_data_t *program_data) {
-	if (ft_strlen(src_ip) < IP_MIN_LEN || ft_strlen(src_ip) > IP_MAX_LEN) {
-		fprintf(stderr, EBADIP, src_ip);
-		return (FAILURE);
-	}
-	if (ft_strlen(trgt_ip) < IP_MIN_LEN || ft_strlen(trgt_ip) > IP_MAX_LEN) {
-		fprintf(stderr, EBADIP, trgt_ip);
-		return (FAILURE);
-	}
-	(void)program_data;
-	return(SUCCESS);
-}
 
 int is_delimiter_valid(char *mac, size_t pos) {
 	if (mac[pos] != '-' && mac[pos] != ':') {
@@ -38,7 +28,7 @@ int is_char_valid(char *mac, size_t pos) {
 	return (SUCCESS);
 }
 
-int is_mac_valid(char *src_mac, char *trgt_mac, prog_data_t *program_data) {
+int is_mac_valid(char *src_mac, char *trgt_mac) {
 	size_t i = 0;
 
 	while (trgt_mac[i] && src_mac[i]) {
@@ -58,14 +48,13 @@ int is_mac_valid(char *src_mac, char *trgt_mac, prog_data_t *program_data) {
 			fprintf(stderr, EBADMAC, src_mac);
 		return (FAILURE);
 	}
-	(void)program_data;
 	return(SUCCESS);
 }
 
-int is_valid_input(char **argv, prog_data_t *program_data) {
-	if (!is_ip_valid(argv[1], argv[3], program_data))
-		return (FAILURE);
-	if (!is_mac_valid(argv[2], argv[4], program_data))
+int is_valid_input(char **argv) {
+	//if (!is_ip_valid(argv[1], argv[3]))
+	//	return (FAILURE);
+	if (!is_mac_valid(argv[2], argv[4]))
 		return (FAILURE);
 	return (SUCCESS);
 }
@@ -141,31 +130,122 @@ unsigned long ascii_to_hex(char *mac) {
 	return (result);
 }
 
-void format_mac_addresses(char **argv, prog_data_t *program_data) {
+int format_mac_addresses(char **argv, prog_data_t *program_data) {
 	char *raw_src_mac = argv[2];
 	char *raw_trgt_mac = argv[4];
 
+	if (program_data->options.verbose) 
+		printf(STARTMACFORM);
+
+	if (!is_mac_valid(raw_src_mac, raw_trgt_mac))
+		return (FAILURE);
+
 	program_data->args.dec_src_mac = ascii_to_hex(raw_src_mac);
 	program_data->args.dec_trgt_mac = ascii_to_hex(raw_trgt_mac);
+
 	if (program_data->options.verbose) {
 		printf(MACFORM, 
 				program_data->args.dec_src_mac, program_data->args.dec_src_mac,
 				program_data->args.dec_trgt_mac, program_data->args.dec_trgt_mac);
 	}
+	return (SUCCESS);
+}
+
+int convert_possible_hostname(char *src_ip, char *trgt_ip, prog_args_t *args) {
+	struct addrinfo hints, *src_resp = 0, *trgt_resp = 0, *ptr = 0;
+	char buffer[IP_MAX_LEN];
+	int src_done = 0, ipv4_done = 0, ipv6_done = 0;
+
+	bzero_data(&hints, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+
+	if (getaddrinfo(src_ip, 0, &hints, &src_resp)) {
+		fprintf(stderr, EBADIP, src_ip);
+		return (FAILURE);
+	}
+	if (getaddrinfo(trgt_ip, 0, &hints, &trgt_resp)) {
+		fprintf(stderr, EBADIP, trgt_ip);
+		freeaddrinfo(src_resp);
+		return (FAILURE);
+	}
+
+	ptr = src_resp;
+	while (ptr) {
+
+		if (ptr->ai_family == AF_INET && !ipv4_done) {
+
+			struct sockaddr_in *ipv4 = (struct sockaddr_in *)ptr->ai_addr;
+			if (!inet_ntop(AF_INET, &(ipv4->sin_addr), buffer, sizeof(buffer))) {
+				fprintf (stderr, ENTOP);
+				return (FAILURE);
+			}
+			src_done ? ft_strcpy(args->trgt_ipv4, buffer) : ft_strcpy(args->src_ipv4, buffer);
+			bzero_data(buffer, IP_MAX_LEN);
+			ipv4_done = 1;
+
+		} else if (ptr->ai_family == AF_INET6 && !ipv6_done) {
+
+			struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)ptr->ai_addr;
+			if (!inet_ntop(AF_INET6, &(ipv6->sin6_addr), buffer, sizeof(buffer))) {
+				fprintf (stderr, ENTOP);
+				return (FAILURE);
+			}
+			src_done ? ft_strcpy(args->trgt_ipv6, buffer) : ft_strcpy(args->src_ipv6, buffer);
+			bzero_data(buffer, IP_MAX_LEN);
+			ipv6_done = 1;
+
+		}
+		ptr = ptr->ai_next;
+		if (!ptr && !src_done) {
+			ptr = trgt_resp;
+			src_done = 1;
+			ipv4_done = 0;
+			ipv6_done = 0;
+		}
+	}
+	freeaddrinfo(src_resp);
+	freeaddrinfo(trgt_resp);
+	return (SUCCESS);
+}
+
+int is_private_address(char **argv, prog_args_t *args) {
+	return(SUCCESS);
+}
+
+int format_ip_addresses(char **argv, prog_data_t *program_data) {
+	char *raw_src_ip = argv[1];
+	char *raw_trgt_ip = argv[3];
+
+	if (program_data->options.verbose)
+		printf(STARTIPFORM);
+
+	if (!convert_possible_hostname(raw_src_ip, raw_trgt_ip, &(program_data->args)))
+		return (FAILURE);
+
+	if (!is_private_address(argv, &(program_data->args)))
+		return (FAILURE);
+
+	if (program_data->options.verbose) {
+		printf(IPFORM, 
+			program_data->args.src_ipv4, program_data->args.dec_src_ip, 
+			program_data->args.trgt_ipv4, program_data->args.dec_trgt_ip);
+	}
+	return (SUCCESS);
 }
 
 int parse_input(int argc, char **argv, prog_data_t *program_data) {
 	if (!are_valid_opts(argc, argv, program_data))
 		return (FAILURE);
-	if (!is_valid_input(argv, program_data))
+	if (!format_mac_addresses(argv, program_data))
 		return (FAILURE);
-	format_mac_addresses(argv, program_data);
+	if (!format_ip_addresses(argv, program_data))
+		return (FAILURE);
 	return (SUCCESS);
 }
 
 int init_program(int argc, char **argv, prog_data_t *program_data) {
 
-	bzero_prog_data(program_data);
+	bzero_data(program_data, sizeof(prog_data_t));
 
 	if (!parse_input(argc, argv, program_data))
 		return (FAILURE);

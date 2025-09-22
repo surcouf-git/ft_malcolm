@@ -1,0 +1,11 @@
+- inet_addr(char *) -> convertit une adresse ip en une donnee binaire exploitable par le reseau (big endian) -> return -1;
+
+- gethostbyname(char *) -> resoud un nom de domaine en une structure contenant les autres noms + ip -> return la structure / set errno si fail (fonctions notees obseletes dans le man, conseil de se servir de getaddrinfo et getnameinfo)
+
+- getaddrinfo(const char *node, const char *service,
+                const struct addrinfo *hints,
+                struct addrinfo **res) ->
+                
+- getifaddrs -> voir les interfaces disponibles sur la machine (pas besoin);
+
+

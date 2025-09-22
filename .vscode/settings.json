@@ -17,7 +17,8 @@
 		"def.h": "c",
 		"random": "c",
 		"stdio.h": "c",
-		"netdb.h": "c"
+		"netdb.h": "c",
+		"global_utils.h": "c"
 	},
 	"C_Cpp.errorSquiggles": "disabled"
 }
