@@ -66,3 +66,33 @@ int ft_classcmp(const char *s1, const char *s2) {
 	}
 	return (1);
 }
+
+unsigned long ascii_to_hex(char *mac) {
+	unsigned long result = 0, digit = 0, multiplier = 1;
+
+	char c = 'a';
+	int start = MIN_CHAR_VAL;
+	unsigned int char_hex_value[256] = {};
+	for (int i = 0; i < MAX_CHAR_RANGE; i++) {
+		char_hex_value[(int)c] = start;
+		char_hex_value[(int)(c - 32)] = start;
+		c++;
+		start++;
+	}
+
+	for (int i = MAC_LEN - 1; i >= 0; i--) {
+		char c = mac[i];
+
+		if (c == ':' || c == '-')
+			continue ;
+
+		if (is_digit(mac[i]))
+			digit = mac[i] - '0';
+		else
+			digit = char_hex_value[(int)mac[i]];
+
+		result += digit * multiplier;
+		multiplier *= BASE_16;
+	}
+	return (result);
+}

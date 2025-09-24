@@ -18,7 +18,8 @@
 		"random": "c",
 		"stdio.h": "c",
 		"netdb.h": "c",
-		"global_utils.h": "c"
+		"global_utils.h": "c",
+		"stdlib.h": "c"
 	},
 	"C_Cpp.errorSquiggles": "disabled"
 }

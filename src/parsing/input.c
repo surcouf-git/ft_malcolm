@@ -51,14 +51,6 @@ int is_mac_valid(char *src_mac, char *trgt_mac) {
 	return(SUCCESS);
 }
 
-int is_valid_input(char **argv) {
-	//if (!is_ip_valid(argv[1], argv[3]))
-	//	return (FAILURE);
-	if (!is_mac_valid(argv[2], argv[4]))
-		return (FAILURE);
-	return (SUCCESS);
-}
-
 int is_valid_opt(char *s) {
 	if (ft_strlen(s) != 2) {
 		fprintf(stderr, EOPT, s);
@@ -98,36 +90,6 @@ int are_valid_opts(int argc, char **argv, prog_data_t *program_data) {
 		i++;
 	}
 	return (SUCCESS);
-}
-
-unsigned long ascii_to_hex(char *mac) {
-	unsigned long result = 0, digit = 0, multiplier = 1;
-
-	char c = 'a';
-	int start = MIN_CHAR_VAL;
-	unsigned int char_hex_value[256] = {};
-	for (int i = 0; i < MAX_CHAR_RANGE; i++) {
-		char_hex_value[(int)c] = start;
-		char_hex_value[(int)(c - 32)] = start;
-		c++;
-		start++;
-	}
-
-	for (int i = MAC_LEN - 1; i >= 0; i--) {
-		char c = mac[i];
-
-		if (c == ':' || c == '-')
-			continue ;
-
-		if (is_digit(mac[i]))
-			digit = mac[i] - '0';
-		else
-			digit = char_hex_value[(int)mac[i]];
-
-		result += digit * multiplier;
-		multiplier *= BASE_16;
-	}
-	return (result);
 }
 
 int format_mac_addresses(char **argv, prog_data_t *program_data) {
@@ -263,6 +225,9 @@ int format_ip_addresses(char **argv, prog_data_t *program_data) {
 
 	if (!is_valid_address(argv, program_data))
 		return (FAILURE);
+	
+	program_data->args.dec_src_ip = inet_addr(program_data->args.src_ipv4);
+	program_data->args.dec_trgt_ip = inet_addr(program_data->args.trgt_ipv4);
 
 	if (program_data->options.verbose) {
 		printf(VALID_IPS);

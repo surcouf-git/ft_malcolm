@@ -1,4 +1,5 @@
 #pragma once
+#pragma pack(1)
 
 #include <stdint.h>
 
@@ -7,20 +8,25 @@
 typedef struct arp_s {
 	uint16_t hardware_type;
 	uint16_t protocol_type;
-	unsigned char vide[38];
-} arp_t;
+	uint8_t hardware_len;
+	uint8_t protocol_len;
+	uint16_t operation;
+	uint8_t sender_hw_addr[6];
+	uint32_t sender_pc_addr;
+	uint8_t target_hw_addr[6];
+	uint32_t target_pc_addr;
+} arp_pckt_t;
 
 typedef struct ethframe_s {
-	unsigned char destination[6];
-	unsigned char source[6];
-	uint16_t length_type;
-	arp_t arp;
-	int checksum;
+	uint8_t destination[6];
+	uint8_t source[6];
+	uint16_t type;
+	arp_pckt_t arp;
 } ethframe_t;
 
 typedef struct prog_opts_s {
-	unsigned verbose;
-	unsigned indepth;
+	unsigned int indepth;
+	unsigned int verbose;
 } prog_opts_t;
 
 typedef struct prog_args_s {
@@ -39,5 +45,11 @@ typedef struct prog_data_s {
 	prog_opts_t options;
 
 	ethframe_t ether_frame;
-	arp_t arp_packet;
+	ethframe_t reply_frame;
 } prog_data_t;
+
+#pragma pack(0)
+
+11110110011111111111011101001111
+
+01111111111101110100111111110110

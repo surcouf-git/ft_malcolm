@@ -12,3 +12,6 @@ int ft_classcmp(const char *s1, const char *s2);
 
 void print_verbose(prog_data_t *program_data, char *message);
 void bzero_data(void *program_data, size_t size);
+
+unsigned long ascii_to_hex(char *mac);
+unsigned long ascii_to_dec(char *ip);

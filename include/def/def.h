@@ -1,6 +1,10 @@
 #pragma once
 
 // == Input ==
+#define REQUEST 1
+
+#define NOT_FOUND 0
+#define FOUND 1
 #define MAC_LEN 17
 #define IP_MAX_LEN 46
 #define IS_DELIMITER i % 3 == 2
@@ -23,6 +27,8 @@
 #define EBADMAC "invalid mac address -> [%s].. exiting\n"
 #define EBADIP "invalid ip address -> [%s].. exiting\n"
 #define ENTOP "inet_ntop() failed.. exiting\n"
+#define ESOCK "socket(): %s\n"
+#define ERECV "recv(): %s\n"
 // ====================
 
 // == Program options == 
@@ -43,3 +49,7 @@
 #define WHYLOCAL "%s ? why would you do this on localhost ? exiting\n"
 #define IPFORM "\t | SOURCE -> ASCII: [%s]; DEC: [%ld]\n\t | TARGET -> ASCII: [%s]; DEC: [%ld]\ndone !\n\n"
 // ====================
+
+//01111111 00000000 00000000 00000001
+
+//11000000 10101000 00000010 00000010

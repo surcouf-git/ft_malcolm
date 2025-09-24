@@ -3,9 +3,10 @@ CC = cc
 UTILS = src/utils/global_utils.c \
 
 SRC = src/main.c \
-	  src/parsing/input.c
+	  src/parsing/input.c \
+	  src/main_loop/main_loop.c
 
-INCLUDES = -I include -I include/utils
+INCLUDES = -I include/structs -I include/utils -I include/def -I include/input -I include/main_loop
 
 RED=\e[31m
 DEF=\e[0m

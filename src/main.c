@@ -12,63 +12,42 @@
 #include "structs.h"
 #include "def.h"
 #include "input.h"
+#include "main_loop.h"
 
 void sig_handler(int) {
 	printf("\nbye\n");
 	exit(0);
 }
 
-int test_main() {
-	struct sigaction action;
-	action.sa_handler = &sig_handler;
+//void display_arp(arp_pckt_t *packet) {
+//	packet->hardware_type = ntohs(packet->hardware_type);
+//	packet->protocol_type = ntohs(packet->protocol_type);
+//	packet->hardware_len = ntohs(packet->hardware_len);
+//	packet->protocol_len = ntohs(packet->protocol_len);
+//	packet->operation = ntohs(packet->operation);
+//	packet->sender_hw_addr = ntohl(packet->sender_hw_addr);
+//	packet->sender_pc_addr = ntohl(packet->sender_pc_addr);
+//	packet->target_hw_addr = ntohl(packet->target_hw_addr);
+//	packet->target_pc_addr = ntohl(packet->target_pc_addr);
 
-	sigaction(SIGINT, &action, NULL);
-
-	uint16_t protocol = htons(ETH_P_ALL);
-	int sock = socket(AF_PACKET, SOCK_RAW, protocol);
-	if (sock == -1) {
-		perror("socket()");
-		return (EXIT_FAILURE);
-	}
-	printf("Socket:[%d]\n", sock);
-
-	char *buffer = calloc(10000, 1);
-	int n = 0;
-	while ((n = recvfrom(sock, buffer, 10000, 0, NULL, NULL)) > 0) {
-		buffer[n] = 0;
-		ethframe_t *f = (ethframe_t *)buffer;
-		printf("SOURCE -> ");
-		for (int i = 0; i < 6; i++) {
-			printf("%X ", f->source[i]);
-		}
-		printf("DESTINATION -> ");
-		for (int i = 0; i < 6; i++) {
-			printf("%X ", f->destination[i]);
-		}
-		f->length_type = ntohs(f->length_type);
-		if (f->length_type == ETH_P_ARP) {
-			arp_t *arp = &f->arp;
-			printf("HW Type: %x | %x", arp->hardware_type, arp->protocol_type);
-		}
-		printf("\n");
-		memset(buffer, 0, 10000);
-	}
-	printf("Process exited with: %d bytes reads\n", n);
-	free(buffer);
-	return (0);
-}
+//	printf("Operation: %d\n", packet->operation);
+//	printf("Sender: %x \n", packet->sender_hw_addr);
+//	printf("Target: %x - %x\n", packet->target_hw_addr, packet->target_pc_addr);
+//}
 
 int main(int argc, char **argv) {
-	//if (argc < 5) {
-	//	fprintf(stderr, EARG);
-	//	return (EXIT_FAILURE);
-	//}
+	if (argc < 5) {
+		fprintf(stderr, EARG);
+		return (EXIT_FAILURE);
+	}
 
 	prog_data_t program_data;
 
 	if (!init_program(argc, argv, &program_data))
 		return (EXIT_FAILURE);
+	
+	if (!main_loop(&program_data))
+		return (EXIT_FAILURE);
 
-	//test_main();
 	return (0);
 }
