@@ -11,6 +11,7 @@
 #include <net/ethernet.h>
 
 #include "main_loop.h"
+#include "global_utils.h"
 #include "structs.h"
 #include "def.h"
 
@@ -42,27 +43,56 @@ void display_eth_frame(ethframe_t *frame) {
 	printf("[END ARP PACKET]\n");
 }
 
-void decimal_to_ip(long ip) {
-	uint8_t addr[4] = {};
+//uint32_t uint8_tab_to_uint32(uint8_t tab[8]) {
+//	uint8_t addr[4] = {};
 
-	printf("DEC TO IP (%ld)\n", ip);
-	int o = 4;
-	for (int i = 0; i < 4; i++) {
-		addr[i] = ip >> o & 0xFF;
-		o += 4;
-		printf("%d\n", addr[i]);
-	}
-	printf ("DONE\n");
-}
+//	printf("DEC TO IP (%ld)\n", ip);
+//	int o = 0;
+//	for (int i = 0; i < 4; i++) {
+//		addr[i] = ip >> o & 0xFF;
+//		o += 8;
+//		printf("%d\n", addr[i]);
+//	}
+//	printf ("DONE\n");
+//}
 
 int is_the_target(ethframe_t *frame, prog_data_t *program_data) {
-	//const unsigned char *value = frame->
-	decimal_to_ip(program_data->args.dec_src_mac);
+	if (frame->arp.sender_pc_addr == program_data->args.dec_trgt_ip) {
+		if (program_data->options.verbose)
+			printf(ARPFOUND, frame->arp.sender_pc_addr, program_data->args.dec_trgt_ip);
+		return (FOUND);
+	}
+	return (NOT_FOUND);
 }
 
-int is_arp_found(ethframe_t *frame, prog_data_t *program_data) {
-	if (is_the_target(frame, program_data))
-	return(NOT_FOUND);
+void build_eth_hdr(ethframe_t *reply_frame, ethframe_t *source_frame, prog_data_t *program_data) {
+	bzero_data(reply_frame, sizeof(ethframe_t));
+
+	int o = 0;
+	uint64_t src_mac = program_data->args.dec_src_mac;
+	for (int i = 0; i < 6; i++) {
+		reply_frame->destination[i] = source_frame->source[i];
+		reply_frame->source[i] = (src_mac >> o) & 0xFF;
+		printf("TKT: -> [%d]\n", reply_frame->destination[i]);
+		printf("SRC_REPLY -> [%lX]\n", src_mac);
+		o += 8;
+	}
+}
+
+void build_reply(ethframe_t *frame, prog_data_t *program_data) {
+	ethframe_t reply_frame;
+
+	build_eth_hdr(&reply_frame, frame, program_data);
+	//build_arp_reply(&reply_frame, frame, program_data);
+}
+
+int validate_and_reply(ethframe_t *frame, prog_data_t *program_data) {
+	if (!is_the_target(frame, program_data))
+		return(NOT_FOUND);
+	/* else */
+	build_reply(frame, program_data);
+	//send_reply(frame, program_data);
+	return (SUCCESS);
 }
 
 int uncap_eht_frame(ethframe_t *frame, prog_data_t *program_data) {
@@ -70,8 +100,7 @@ int uncap_eht_frame(ethframe_t *frame, prog_data_t *program_data) {
 
 	if (type == ETH_P_ARP) {
 		display_eth_frame(frame);
-
-		if (is_arp_found(frame, program_data))
+		if (validate_and_reply(frame, program_data))
 			return (FOUND);
 	}
 	return (NOT_FOUND);

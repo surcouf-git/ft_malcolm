@@ -2,7 +2,7 @@
 
 // == Input ==
 #define REQUEST 1
-
+#define IPLEN 4
 #define NOT_FOUND 0
 #define FOUND 1
 #define MAC_LEN 17
@@ -40,14 +40,15 @@
 
 // == Verbose ==
 #define STARTMACFORM "formating MAC addresses..\n"
-#define MACFORM "\t | SOURCE -> HEX: [%lx]; DEC: [%ld]\n\t | TARGET -> HEX: [%lx]; DEC: [%ld]\ndone !\n\n"
+#define MACFORM "\t | SOURCE -> HEX: [%X]; DEC: [%d]\n\t | TARGET -> HEX: [%X]; DEC: [%d]\ndone !\n\n"
 #define STARTIPFORM "formating IP addresses..\n"
 #define HOSTTOIPSRC "hostname resolution found for : \n\t | SOURCE -> HOSTNAME: [%s]; IP: [%s]\n"
 #define HOSTTOIPTRGT "hostname resolution found for : \n\t | TARGET -> HOSTNAME: [%s]; IP: [%s]\n"
 #define VALID_IPS "valid IPS: \n"
 #define WHYPUBLIC "%s ? why would you do this on a public addess ? exiting\n"
 #define WHYLOCAL "%s ? why would you do this on localhost ? exiting\n"
-#define IPFORM "\t | SOURCE -> ASCII: [%s]; DEC: [%ld]\n\t | TARGET -> ASCII: [%s]; DEC: [%ld]\ndone !\n\n"
+#define IPFORM "\t | SOURCE -> ASCII: [%s]; DEC: [%d]\n\t | TARGET -> ASCII: [%s]; DEC: [%d]\ndone !\n\n"
+#define ARPFOUND "ARP request with target IP found !\n\t | ARP SRC -> [%d] ARG TARGET -> [%d]\n" // afficher en string ?
 // ====================
 
 //01111111 00000000 00000000 00000001

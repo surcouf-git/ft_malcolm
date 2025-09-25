@@ -32,12 +32,12 @@ typedef struct prog_opts_s {
 typedef struct prog_args_s {
 	char src_ipv4[IP_MAX_LEN];
 	char src_ipv6[IP_MAX_LEN];
-	unsigned long dec_src_ip;
-	unsigned long dec_src_mac;
+	uint32_t dec_src_ip;
+	uint64_t dec_src_mac;
 	char trgt_ipv4[IP_MAX_LEN];
 	char trgt_ipv6[IP_MAX_LEN];
-	unsigned long dec_trgt_ip;
-	unsigned long dec_trgt_mac;
+	uint32_t dec_trgt_ip;
+	uint64_t dec_trgt_mac;
 } prog_args_t;
 
 typedef struct prog_data_s {
@@ -50,6 +50,4 @@ typedef struct prog_data_s {
 
 #pragma pack(0)
 
-11110110011111111111011101001111
-
-01111111111101110100111111110110
+//101110001001111 01111111 01100101
