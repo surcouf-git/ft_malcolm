@@ -8,7 +8,7 @@
 #include "structs.h"
 #include "def.h"
 
-int is_delimiter_valid(char *mac, size_t pos) {
+int is_delimiter_valid(const char *mac, size_t pos) {
 	if (mac[pos] != '-' && mac[pos] != ':') {
 		fprintf(stderr, EBADMAC, mac);
 		return (FAILURE);
@@ -16,7 +16,7 @@ int is_delimiter_valid(char *mac, size_t pos) {
 	return(SUCCESS);
 }
 
-int is_char_valid(char *mac, size_t pos) {
+int is_char_valid(const char *mac, size_t pos) {
 	char c = mac[pos];
 
 	if (is_digit(c))
@@ -28,7 +28,7 @@ int is_char_valid(char *mac, size_t pos) {
 	return (SUCCESS);
 }
 
-int is_mac_valid(char *src_mac, char *trgt_mac) {
+int is_mac_valid(const char *src_mac, const char *trgt_mac) {
 	size_t i = 0;
 
 	while (trgt_mac[i] && src_mac[i]) {
@@ -92,9 +92,20 @@ int are_valid_opts(int argc, char **argv, prog_data_t *program_data) {
 	return (SUCCESS);
 }
 
+void fill_prog_data(const char *raw_src_mac, const char *raw_trgt_mac, prog_data_t *program_data) {
+	uint64_t *dec_src_mac = &(program_data->args.dec_src_mac), 
+				*dec_trgt_mac = &(program_data->args.dec_trgt_mac);
+
+	uint8_t *src_mac_tab = program_data->args.src_mac_tab,
+				*trgt_mac_tab = program_data->args.trgt_mac_tab;
+
+	*dec_src_mac = ascii_to_hex(raw_src_mac, src_mac_tab);
+	*dec_trgt_mac = ascii_to_hex(raw_trgt_mac, trgt_mac_tab);
+}
+
 int format_mac_addresses(char **argv, prog_data_t *program_data) {
-	char *raw_src_mac = argv[2];
-	char *raw_trgt_mac = argv[4];
+	const char *raw_src_mac = argv[2], 
+				*raw_trgt_mac = argv[4];
 
 	if (program_data->options.verbose) 
 		printf(STARTMACFORM);
@@ -102,8 +113,7 @@ int format_mac_addresses(char **argv, prog_data_t *program_data) {
 	if (!is_mac_valid(raw_src_mac, raw_trgt_mac))
 		return (FAILURE);
 
-	program_data->args.dec_src_mac = ascii_to_hex(raw_src_mac);
-	program_data->args.dec_trgt_mac = ascii_to_hex(raw_trgt_mac);
+	fill_prog_data(raw_src_mac, raw_trgt_mac, program_data);
 
 	if (program_data->options.verbose) {
 		printf(MACFORM, 
@@ -141,7 +151,7 @@ int convert_possible_hostname(char *src_ip, char *trgt_ip, prog_args_t *args) {
 				fprintf (stderr, ENTOP);
 				return (FAILURE);
 			}
-			src_done ? ft_strcpy(args->trgt_ipv4, buffer) : ft_strcpy(args->src_ipv4, buffer);
+			src_done ? ft_strcpy((char *)args->trgt_ipv4, buffer) : ft_strcpy((char *)args->src_ipv4, buffer);
 			bzero_data(buffer, IP_MAX_LEN);
 			ipv4_done = 1;
 
@@ -152,7 +162,7 @@ int convert_possible_hostname(char *src_ip, char *trgt_ip, prog_args_t *args) {
 				fprintf (stderr, ENTOP);
 				return (FAILURE);
 			}
-			src_done ? ft_strcpy(args->trgt_ipv6, buffer) : ft_strcpy(args->src_ipv6, buffer);
+			src_done ? ft_strcpy((char *)args->trgt_ipv6, buffer) : ft_strcpy((char *)args->src_ipv6, buffer);
 			bzero_data(buffer, IP_MAX_LEN);
 			ipv6_done = 1;
 
@@ -196,8 +206,8 @@ int are_private_ips(const char *src_ip, const char *trgt_ip) {
 // TODO 172.16 a un masque de 240... donc la deuxieme partie n'est pas forcement '16'
 
 int is_valid_address(char **argv, prog_data_t *program_data) {
-	const char *src_ip = program_data->args.src_ipv4;
-	const char *trgt_ip = program_data->args.trgt_ipv4;
+	const char *src_ip = (const char *)program_data->args.src_ipv4;
+	const char *trgt_ip = (const char *)program_data->args.trgt_ipv4;
 
 	if (program_data->options.verbose) {
 
@@ -226,8 +236,8 @@ int format_ip_addresses(char **argv, prog_data_t *program_data) {
 	if (!is_valid_address(argv, program_data))
 		return (FAILURE);
 	
-	program_data->args.dec_src_ip = inet_addr(program_data->args.src_ipv4);
-	program_data->args.dec_trgt_ip = inet_addr(program_data->args.trgt_ipv4);
+	program_data->args.dec_src_ip = inet_addr((char *)program_data->args.src_ipv4);
+	program_data->args.dec_trgt_ip = inet_addr((char *)program_data->args.trgt_ipv4);
 
 	if (program_data->options.verbose) {
 		printf(VALID_IPS);

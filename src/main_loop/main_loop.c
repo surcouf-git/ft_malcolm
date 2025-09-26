@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <errno.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <strings.h>
 #include <string.h>
 #include <signal.h>
+#include <net/if.h>
 #include <arpa/inet.h>
 #include <netpacket/packet.h>
 #include <net/ethernet.h>
@@ -18,48 +20,43 @@
 void puthex(unsigned char *data, int n) {
 	int i = 0;
 	while (i < n) {
-		printf("%X ", data[i]);
+		printf("%.2X ", data[i]);
 		i++;
 	}
 }
 
 void display_eth_frame(ethframe_t *frame) {
-	printf("[====================]\n");
-	printf("[ETH FRAME]\n");
-	printf("DESTINATION: ");
+	if (frame->type == htons(REQUEST))
+		printf("====================\nReceived ETH frame: \n");
+	else 
+		printf("====================\nBuilt ETH frame: \n");
+
+	printf("[ETH FRAME]\n\n");
+	printf("DESTINATION: \n\t | ");
 	puthex((unsigned char *)&frame->destination, 6);
 	printf("\n");
-	printf("SOURCE: ");
+	printf("SOURCE: \n\t | ");
 	puthex((unsigned char *)&frame->source, 6);
-	printf("\n[END ETH FRAME]\n");
-	printf("[ARP PACKET]\n");
-	printf("Hardware type: %X\n", ntohs(frame->arp.hardware_type));
-	printf("Protocol type: %X\n", ntohs(frame->arp.protocol_type));
-	printf("Operation: %X\n", ntohs(frame->arp.operation));
-	printf("Sender HW addr: \n");
+	printf("\n\n[END ETH FRAME]\n");
+	printf("[ARP PACKET]\n\n");
+	printf("Hardware type: \n\t | %X\n", ntohs(frame->arp.hardware_type));
+	printf("Protocol type: \n\t | %X\n", ntohs(frame->arp.protocol_type));
+	printf("Operation: \n\t | %X\n", ntohs(frame->arp.operation));
+	printf("Sender HW addr: \n\t | ");
 	puthex(frame->arp.sender_hw_addr, 6);
-	//printf("Sender protocol addr: %X\n", )
+	printf("\nSender IP addr: \n\t | %d\n", frame->arp.sender_pc_addr);
+	printf("Target HW addr: \n\t | ");
+	puthex(frame->arp.target_hw_addr, 6);
+	printf("\nTarget IP addr: \n\t | %d\n", frame->arp.target_pc_addr);
 	printf("\n");
 	printf("[END ARP PACKET]\n");
+	printf("====================\n");
 }
 
-//uint32_t uint8_tab_to_uint32(uint8_t tab[8]) {
-//	uint8_t addr[4] = {};
-
-//	printf("DEC TO IP (%ld)\n", ip);
-//	int o = 0;
-//	for (int i = 0; i < 4; i++) {
-//		addr[i] = ip >> o & 0xFF;
-//		o += 8;
-//		printf("%d\n", addr[i]);
-//	}
-//	printf ("DONE\n");
-//}
-
 int is_the_target(ethframe_t *frame, prog_data_t *program_data) {
-	if (frame->arp.sender_pc_addr == program_data->args.dec_trgt_ip) {
+	if (frame->arp.target_pc_addr == program_data->args.dec_src_ip) {
 		if (program_data->options.verbose)
-			printf(ARPFOUND, frame->arp.sender_pc_addr, program_data->args.dec_trgt_ip);
+			printf(TRGTFOUND);
 		return (FOUND);
 	}
 	return (NOT_FOUND);
@@ -68,46 +65,80 @@ int is_the_target(ethframe_t *frame, prog_data_t *program_data) {
 void build_eth_hdr(ethframe_t *reply_frame, ethframe_t *source_frame, prog_data_t *program_data) {
 	bzero_data(reply_frame, sizeof(ethframe_t));
 
-	int o = 0;
-	uint64_t src_mac = program_data->args.dec_src_mac;
 	for (int i = 0; i < 6; i++) {
 		reply_frame->destination[i] = source_frame->source[i];
-		reply_frame->source[i] = (src_mac >> o) & 0xFF;
-		printf("TKT: -> [%d]\n", reply_frame->destination[i]);
-		printf("SRC_REPLY -> [%lX]\n", src_mac);
-		o += 8;
+		reply_frame->source[i] = program_data->args.src_mac_tab[i];
 	}
+	reply_frame->type = htons(ETH_P_ARP);
 }
 
-void build_reply(ethframe_t *frame, prog_data_t *program_data) {
+void build_arp_reply(arp_pckt_t *reply_arp_pckt, prog_data_t *program_data) {
+	reply_arp_pckt->hardware_type = htons(ETH);
+	reply_arp_pckt->protocol_type = htons(ETH_P_IP);
+	reply_arp_pckt->hardware_len = BYTE_MAC_LEN;
+	reply_arp_pckt->protocol_len = IPLEN;
+	reply_arp_pckt->operation = htons(REPLY);
+
+	ft_ustrcpy(reply_arp_pckt->sender_hw_addr, program_data->args.src_mac_tab);
+	reply_arp_pckt->sender_pc_addr = program_data->args.dec_src_ip;
+
+	ft_ustrcpy(reply_arp_pckt->target_hw_addr, program_data->args.trgt_mac_tab);
+	reply_arp_pckt->target_pc_addr = program_data->args.dec_trgt_ip;
+}
+
+void build_reply(ethframe_t *source_frame, prog_data_t *program_data) {
 	ethframe_t reply_frame;
+	arp_pckt_t reply_arp_pckt;
 
-	build_eth_hdr(&reply_frame, frame, program_data);
-	//build_arp_reply(&reply_frame, frame, program_data);
+	build_eth_hdr(&reply_frame, source_frame, program_data);
+	build_arp_reply(&reply_arp_pckt, program_data);
+
+	reply_frame.arp = reply_arp_pckt;
+	program_data->reply_frame = reply_frame;
+
+	if (program_data->options.verbose)
+		display_eth_frame(&reply_frame);
 }
 
-int validate_and_reply(ethframe_t *frame, prog_data_t *program_data) {
-	if (!is_the_target(frame, program_data))
+void send_reply(int sock, prog_data_t *program_data) {
+	const void *buf = &program_data->reply_frame;
+
+	struct sockaddr_ll sll;
+	memset(&sll, 0, sizeof(sll));
+	sll.sll_family = AF_PACKET;
+	sll.sll_protocol = htons(ETH_P_ARP);
+	sll.sll_ifindex = if_nametoindex("enp7s0");
+
+	ssize_t sent = sendto(sock, buf, sizeof(ethframe_t), 0, (struct sockaddr*)&sll, sizeof(sll));
+	if (sent < 0) {
+		fprintf(stderr, ESENDTO);
+		return ;
+	}
+
+	if (program_data->options.verbose)
+		printf("ARP reply sent (%zd bytes)\n", sent);
+}
+
+int validate_and_build(ethframe_t *source_frame, prog_data_t *program_data) {
+	if (!is_the_target(source_frame, program_data))
 		return(NOT_FOUND);
 	/* else */
-	build_reply(frame, program_data);
-	//send_reply(frame, program_data);
-	return (SUCCESS);
+	build_reply(source_frame, program_data);
+	return (FOUND);
 }
 
-int uncap_eht_frame(ethframe_t *frame, prog_data_t *program_data) {
-	const uint16_t type = ntohs(frame->type);
+int uncap_eht_frame(ethframe_t *source_frame, prog_data_t *program_data) {
+	const uint16_t type = ntohs(source_frame->type);
 
 	if (type == ETH_P_ARP) {
-		display_eth_frame(frame);
-		if (validate_and_reply(frame, program_data))
+		if (validate_and_build(source_frame, program_data))
 			return (FOUND);
 	}
 	return (NOT_FOUND);
 }
 
 int is_packet_found(int sock, char *buffer, prog_data_t *program_data) {
-	ethframe_t *frame;
+	ethframe_t *source_frame;
 
 	int bytes_read = recvfrom(sock, buffer, BUFFER_SIZE - 1, 0, NULL, NULL);
 	if (bytes_read <= 0) {
@@ -116,11 +147,13 @@ int is_packet_found(int sock, char *buffer, prog_data_t *program_data) {
 	}
 	buffer[bytes_read] = 0;
 
-	frame = (ethframe_t *)buffer;
+	source_frame = (ethframe_t *)buffer;
 
-	if (!uncap_eht_frame(frame, program_data))
+	if (!uncap_eht_frame(source_frame, program_data))
 		return (NOT_FOUND);
-	return (FOUND);
+	else
+		send_reply(sock, program_data);
+	return (NOT_FOUND);
 }
 
 int main_loop(prog_data_t *program_data) {

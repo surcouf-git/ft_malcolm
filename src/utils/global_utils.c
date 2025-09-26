@@ -45,6 +45,13 @@ void ft_strcpy(char *s1, char *s2) {
 	}
 }
 
+void ft_ustrcpy(uint8_t *s1, uint8_t *s2) {
+	if (!s2)
+		return ;
+	for (int i = 0; s2[i]; i++)
+		s1[i] = s2[i];
+}
+
 int ft_strcmp(const char *s1, const char *s2) {
 	if (!s1 || !s2)
 		return (0);
@@ -67,12 +74,14 @@ int ft_classcmp(const char *s1, const char *s2) {
 	return (1);
 }
 
-unsigned long ascii_to_hex(char *mac) {
-	unsigned long result = 0, digit = 0, multiplier = 1;
-
+// == fill mac_tab byte by bytes and return hex to dec value == //TODO clean code
+uint64_t ascii_to_hex(const char *mac, uint8_t *mac_tab) {
+	int even = 0, digit = 0, byte = 5;
+	uint64_t result = 0, multiplier = 1;
 	char c = 'a';
 	int start = MIN_CHAR_VAL;
 	unsigned int char_hex_value[256] = {};
+
 	for (int i = 0; i < MAX_CHAR_RANGE; i++) {
 		char_hex_value[(int)c] = start;
 		char_hex_value[(int)(c - 32)] = start;
@@ -83,14 +92,23 @@ unsigned long ascii_to_hex(char *mac) {
 	for (int i = MAC_LEN - 1; i >= 0; i--) {
 		char c = mac[i];
 
-		if (c == ':' || c == '-')
+		if (c == ':' || c == '-') {
+			byte -= 1;
+			even = 0;
 			continue ;
+		}
 
 		if (is_digit(mac[i]))
 			digit = mac[i] - '0';
 		else
 			digit = char_hex_value[(int)mac[i]];
 
+		if (even) {
+			mac_tab[byte] += digit * BASE_16;
+		} else {
+			mac_tab[byte] = digit;
+			even = 1;
+		}
 		result += digit * multiplier;
 		multiplier *= BASE_16;
 	}

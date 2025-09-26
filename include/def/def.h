@@ -1,11 +1,17 @@
 #pragma once
 
-// == Input ==
+// == Arp ==
+#define ETH 1
 #define REQUEST 1
+#define REPLY 2
+// ====================
+
+// == Input ==
 #define IPLEN 4
 #define NOT_FOUND 0
 #define FOUND 1
 #define MAC_LEN 17
+#define BYTE_MAC_LEN 6
 #define IP_MAX_LEN 46
 #define IS_DELIMITER i % 3 == 2
 #define MIN_CHAR_VAL 10
@@ -29,6 +35,7 @@
 #define ENTOP "inet_ntop() failed.. exiting\n"
 #define ESOCK "socket(): %s\n"
 #define ERECV "recv(): %s\n"
+#define ESENDTO "sendto() failed\n"
 // ====================
 
 // == Program options == 
@@ -40,7 +47,7 @@
 
 // == Verbose ==
 #define STARTMACFORM "formating MAC addresses..\n"
-#define MACFORM "\t | SOURCE -> HEX: [%X]; DEC: [%d]\n\t | TARGET -> HEX: [%X]; DEC: [%d]\ndone !\n\n"
+#define MACFORM "\t | SOURCE -> HEX: [%lX]; DEC: [%ld]\n\t | TARGET -> HEX: [%lX]; DEC: [%ld]\ndone !\n\n"
 #define STARTIPFORM "formating IP addresses..\n"
 #define HOSTTOIPSRC "hostname resolution found for : \n\t | SOURCE -> HOSTNAME: [%s]; IP: [%s]\n"
 #define HOSTTOIPTRGT "hostname resolution found for : \n\t | TARGET -> HOSTNAME: [%s]; IP: [%s]\n"
@@ -48,9 +55,5 @@
 #define WHYPUBLIC "%s ? why would you do this on a public addess ? exiting\n"
 #define WHYLOCAL "%s ? why would you do this on localhost ? exiting\n"
 #define IPFORM "\t | SOURCE -> ASCII: [%s]; DEC: [%d]\n\t | TARGET -> ASCII: [%s]; DEC: [%d]\ndone !\n\n"
-#define ARPFOUND "ARP request with target IP found !\n\t | ARP SRC -> [%d] ARG TARGET -> [%d]\n" // afficher en string ?
+#define TRGTFOUND "ARP request with target IP found !\n" // afficher en string ?
 // ====================
-
-//01111111 00000000 00000000 00000001
-
-//11000000 10101000 00000010 00000010
