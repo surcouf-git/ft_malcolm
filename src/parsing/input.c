@@ -8,7 +8,7 @@
 #include "structs.h"
 #include "def.h"
 
-int is_delimiter_valid(const char *mac, size_t pos) {
+static int is_delimiter_valid(const char *mac, size_t pos) {
 	if (mac[pos] != '-' && mac[pos] != ':') {
 		fprintf(stderr, EBADMAC, mac);
 		return (FAILURE);
@@ -16,7 +16,7 @@ int is_delimiter_valid(const char *mac, size_t pos) {
 	return(SUCCESS);
 }
 
-int is_char_valid(const char *mac, size_t pos) {
+static int is_char_valid(const char *mac, size_t pos) {
 	char c = mac[pos];
 
 	if (is_digit(c))
@@ -28,7 +28,7 @@ int is_char_valid(const char *mac, size_t pos) {
 	return (SUCCESS);
 }
 
-int is_mac_valid(const char *src_mac, const char *trgt_mac) {
+static int is_mac_valid(const char *src_mac, const char *trgt_mac) {
 	size_t i = 0;
 
 	while (trgt_mac[i] && src_mac[i]) {
@@ -41,17 +41,17 @@ int is_mac_valid(const char *src_mac, const char *trgt_mac) {
 		}
 		i++;
 	}
-	if (i != MAC_LEN) {
-		if (!trgt_mac[i])
-			fprintf(stderr, EBADMAC, trgt_mac);
-		else
-			fprintf(stderr, EBADMAC, src_mac);
-		return (FAILURE);
+	if (ft_strlen(trgt_mac) != 17) {
+		fprintf(stderr, EBADMAC, trgt_mac);
+		return(FAILURE);
+	} else if (ft_strlen(src_mac) != 17) {
+		fprintf(stderr, EBADMAC, src_mac);
+		return(FAILURE);
 	}
 	return(SUCCESS);
 }
 
-int is_valid_opt(char *s) {
+static int is_valid_opt(char *s) {
 	if (ft_strlen(s) != 2) {
 		fprintf(stderr, EOPT, s);
 		return (FAILURE);
@@ -72,14 +72,14 @@ int is_valid_opt(char *s) {
 	return(FAILURE);
 }
 
-void add_opt(char *c, prog_data_t *program_data) {
+static void add_opt(char *c, prog_data_t *program_data) {
 	if (c[1] == 'v')
 		program_data->options.verbose = 1;
-	if (c[1] == 'i')
-		program_data->options.indepth = 1;
+	if (c[1] == 's')
+		program_data->options.spam = 1;
 }
 
-int are_valid_opts(int argc, char **argv, prog_data_t *program_data) {
+static int are_valid_opts(int argc, char **argv, prog_data_t *program_data) {
 	if (argc == 5)
 		return (SUCCESS);
 	
@@ -92,7 +92,7 @@ int are_valid_opts(int argc, char **argv, prog_data_t *program_data) {
 	return (SUCCESS);
 }
 
-void fill_prog_data(const char *raw_src_mac, const char *raw_trgt_mac, prog_data_t *program_data) {
+static void fill_prog_data(const char *raw_src_mac, const char *raw_trgt_mac, prog_data_t *program_data) {
 	uint64_t *dec_src_mac = &(program_data->args.dec_src_mac), 
 				*dec_trgt_mac = &(program_data->args.dec_trgt_mac);
 
@@ -103,7 +103,7 @@ void fill_prog_data(const char *raw_src_mac, const char *raw_trgt_mac, prog_data
 	*dec_trgt_mac = ascii_to_hex(raw_trgt_mac, trgt_mac_tab);
 }
 
-int format_mac_addresses(char **argv, prog_data_t *program_data) {
+static int format_mac_addresses(char **argv, prog_data_t *program_data) {
 	const char *raw_src_mac = argv[2], 
 				*raw_trgt_mac = argv[4];
 
@@ -123,64 +123,65 @@ int format_mac_addresses(char **argv, prog_data_t *program_data) {
 	return (SUCCESS);
 }
 
-int convert_possible_hostname(char *src_ip, char *trgt_ip, prog_args_t *args) {
-	struct addrinfo hints, *src_resp = 0, *trgt_resp = 0, *ptr = 0;
-	char buffer[IP_MAX_LEN];
-	int src_done = 0, ipv4_done = 0, ipv6_done = 0;
+static int get_addr_infos(char *src_ip, char *trgt_ip,
+							struct addrinfo *hints, 
+								struct addrinfo **src_info, 
+									struct addrinfo **trgt_info) {
 
-	bzero_data(&hints, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
+	bzero_data(hints, sizeof(struct addrinfo));
+	hints->ai_family = AF_INET;
 
-	if (getaddrinfo(src_ip, 0, &hints, &src_resp)) {
+	if (getaddrinfo(src_ip, 0, hints, src_info)) {
 		fprintf(stderr, EBADIP, src_ip);
 		return (FAILURE);
 	}
-	if (getaddrinfo(trgt_ip, 0, &hints, &trgt_resp)) {
+
+	if (getaddrinfo(trgt_ip, 0, hints, trgt_info)) {
 		fprintf(stderr, EBADIP, trgt_ip);
-		freeaddrinfo(src_resp);
+		freeaddrinfo(*src_info);
 		return (FAILURE);
 	}
+	return (SUCCESS);
+}
 
-	ptr = src_resp;
+static int convert_possible_hostname(char *src_ip, char *trgt_ip, prog_args_t *args) {
+	struct addrinfo hints, *src_info = NULL, *trgt_info = NULL, *ptr = NULL;
+	char buffer[IP_MAX_LEN];
+	
+	if (!get_addr_infos(src_ip, trgt_ip, &hints, &src_info, &trgt_info))
+		return (FAILURE);
+	
+	int src_done = 0;
+	ptr = src_info;
 	while (ptr) {
 
-		if (ptr->ai_family == AF_INET && !ipv4_done) {
+		if (ptr->ai_family == AF_INET) {
 
 			struct sockaddr_in *ipv4 = (struct sockaddr_in *)ptr->ai_addr;
 			if (!inet_ntop(AF_INET, &(ipv4->sin_addr), buffer, sizeof(buffer))) {
 				fprintf (stderr, ENTOP);
 				return (FAILURE);
 			}
+
 			src_done ? ft_strcpy((char *)args->trgt_ipv4, buffer) : ft_strcpy((char *)args->src_ipv4, buffer);
 			bzero_data(buffer, IP_MAX_LEN);
-			ipv4_done = 1;
-
-		} else if (ptr->ai_family == AF_INET6 && !ipv6_done) {
-
-			struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)ptr->ai_addr;
-			if (!inet_ntop(AF_INET6, &(ipv6->sin6_addr), buffer, sizeof(buffer))) {
-				fprintf (stderr, ENTOP);
-				return (FAILURE);
-			}
-			src_done ? ft_strcpy((char *)args->trgt_ipv6, buffer) : ft_strcpy((char *)args->src_ipv6, buffer);
-			bzero_data(buffer, IP_MAX_LEN);
-			ipv6_done = 1;
 
 		}
-		ptr = ptr->ai_next;
-		if (!ptr && !src_done) {
-			ptr = trgt_resp;
+		if (!src_done) {
+			ptr = trgt_info;
 			src_done = 1;
-			ipv4_done = 0;
-			ipv6_done = 0;
+			continue ;
 		}
+		break ;
 	}
-	freeaddrinfo(src_resp);
-	freeaddrinfo(trgt_resp);
+
+	freeaddrinfo(src_info);
+	freeaddrinfo(trgt_info);
+
 	return (SUCCESS);
 }
 
-int are_private_ips(const char *src_ip, const char *trgt_ip) {
+static int are_private_ips(const char *src_ip, const char *trgt_ip) {
 	int src_is_valid = 0, trgt_is_valid = 0, i = 0;
 	const int max_classes = 3;
 	const char *classes[3] = { CLASS_A, CLASS_B, CLASS_C };
@@ -203,9 +204,7 @@ int are_private_ips(const char *src_ip, const char *trgt_ip) {
 	return (SUCCESS);
 }
 
-// TODO 172.16 a un masque de 240... donc la deuxieme partie n'est pas forcement '16'
-
-int is_valid_address(char **argv, prog_data_t *program_data) {
+static int is_valid_address(char **argv, prog_data_t *program_data) {
 	const char *src_ip = (const char *)program_data->args.src_ipv4;
 	const char *trgt_ip = (const char *)program_data->args.trgt_ipv4;
 
@@ -223,7 +222,7 @@ int is_valid_address(char **argv, prog_data_t *program_data) {
 	return(SUCCESS);
 }
 
-int format_ip_addresses(char **argv, prog_data_t *program_data) {
+static int format_ip_addresses(char **argv, prog_data_t *program_data) {
 	char *raw_src_ip = argv[1];
 	char *raw_trgt_ip = argv[3];
 
@@ -248,7 +247,7 @@ int format_ip_addresses(char **argv, prog_data_t *program_data) {
 	return (SUCCESS);
 }
 
-int parse_input(int argc, char **argv, prog_data_t *program_data) {
+static int parse_input(int argc, char **argv, prog_data_t *program_data) {
 	if (!are_valid_opts(argc, argv, program_data))
 		return (FAILURE);
 	if (!format_mac_addresses(argv, program_data))

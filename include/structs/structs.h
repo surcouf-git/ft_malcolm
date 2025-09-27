@@ -25,7 +25,7 @@ typedef struct ethframe_s {
 } ethframe_t;
 
 typedef struct prog_opts_s {
-	unsigned int indepth;
+	unsigned int spam;
 	unsigned int verbose;
 } prog_opts_t;
 
@@ -51,5 +51,3 @@ typedef struct prog_data_s {
 } prog_data_t;
 
 #pragma pack(0)
-
-//101110001001111 01111111 01100101

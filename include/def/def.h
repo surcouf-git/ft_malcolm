@@ -7,12 +7,13 @@
 // ====================
 
 // == Input ==
+#define CONTINUE 0
 #define IPLEN 4
 #define NOT_FOUND 0
 #define FOUND 1
 #define MAC_LEN 17
 #define BYTE_MAC_LEN 6
-#define IP_MAX_LEN 46
+#define IP_MAX_LEN 16
 #define IS_DELIMITER i % 3 == 2
 #define MIN_CHAR_VAL 10
 #define MAX_CHAR_RANGE 6
@@ -24,6 +25,9 @@
 #define LOCALHOST "127.0.0.1"
 // ====================
 
+// == Messages ==
+#define SSEND "ARP reply successfully sent to %s ! exiting\n"
+
 // == Errors ==
 #define SUCCESS 1
 #define FAILURE 0
@@ -34,26 +38,27 @@
 #define EBADIP "invalid ip address -> [%s].. exiting\n"
 #define ENTOP "inet_ntop() failed.. exiting\n"
 #define ESOCK "socket(): %s\n"
-#define ERECV "recv(): %s\n"
+#define ERECV "recvfrom(): %s\n"
 #define ESENDTO "sendto() failed\n"
+#define WHYPUBLIC "%s ? why would you do this on a non private addess ? exiting\n"
+#define WHYLOCAL "%s ? why would you do this on localhost ? exiting\n"
 // ====================
 
 // == Program options == 
 #define MAX_POSSIBLE_OPTS 1
-#define VALID_OPTS "v"
+#define VALID_OPTS "vs"
 
 #define VERBOSE 1
+#define SPAM 's'
 // ====================
 
 // == Verbose ==
 #define STARTMACFORM "formating MAC addresses..\n"
-#define MACFORM "\t | SOURCE -> HEX: [%lX]; DEC: [%ld]\n\t | TARGET -> HEX: [%lX]; DEC: [%ld]\ndone !\n\n"
+#define MACFORM "\t | SOURCE -> HEX: [%lX]; DEC: [%lu]\n\t | TARGET -> HEX: [%lX]; DEC: [%lu]\ndone !\n\n"
 #define STARTIPFORM "formating IP addresses..\n"
 #define HOSTTOIPSRC "hostname resolution found for : \n\t | SOURCE -> HOSTNAME: [%s]; IP: [%s]\n"
 #define HOSTTOIPTRGT "hostname resolution found for : \n\t | TARGET -> HOSTNAME: [%s]; IP: [%s]\n"
 #define VALID_IPS "valid IPS: \n"
-#define WHYPUBLIC "%s ? why would you do this on a public addess ? exiting\n"
-#define WHYLOCAL "%s ? why would you do this on localhost ? exiting\n"
-#define IPFORM "\t | SOURCE -> ASCII: [%s]; DEC: [%d]\n\t | TARGET -> ASCII: [%s]; DEC: [%d]\ndone !\n\n"
+#define IPFORM "\t | SOURCE -> ASCII: [%s]; DEC: [%u]\n\t | TARGET -> ASCII: [%s]; DEC: [%u]\ndone !\n\n"
 #define TRGTFOUND "ARP request with target IP found !\n" // afficher en string ?
 // ====================
