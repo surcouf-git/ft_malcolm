@@ -27,6 +27,7 @@ typedef struct ethframe_s {
 typedef struct prog_opts_s {
 	unsigned int spam;
 	unsigned int verbose;
+	unsigned int interface;
 } prog_opts_t;
 
 typedef struct prog_args_s {
@@ -40,6 +41,8 @@ typedef struct prog_args_s {
 	uint32_t dec_trgt_ip;
 	uint8_t trgt_mac_tab[BYTE_MAC_LEN];
 	uint64_t dec_trgt_mac;
+
+	char interface[MAX_INTERFACE_SIZE];
 } prog_args_t;
 
 typedef struct prog_data_s {

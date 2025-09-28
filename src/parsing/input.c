@@ -3,10 +3,14 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <ifaddrs.h>
+#include <net/if.h>
 
 #include "global_utils.h"
 #include "structs.h"
 #include "def.h"
+
+extern int has_signal;
 
 static int is_delimiter_valid(const char *mac, size_t pos) {
 	if (mac[pos] != '-' && mac[pos] != ':') {
@@ -72,11 +76,20 @@ static int is_valid_opt(char *s) {
 	return(FAILURE);
 }
 
-static void add_opt(char *c, prog_data_t *program_data) {
+static int add_opt(char *c, prog_data_t *program_data) {
 	if (c[1] == 'v')
 		program_data->options.verbose = 1;
 	if (c[1] == 's')
 		program_data->options.spam = 1;
+	if (c[1] == 'i') {
+		printf("-i detected, wich interface do you want to use ?\n->");
+		if (scanf("%15s", program_data->args.interface) <= 0) {
+			if (!has_signal) fprintf (stderr, EBADINPT);
+			return (FAILURE);
+		}
+		printf("\n");
+	}
+	return (SUCCESS);
 }
 
 static int are_valid_opts(int argc, char **argv, prog_data_t *program_data) {
@@ -86,7 +99,7 @@ static int are_valid_opts(int argc, char **argv, prog_data_t *program_data) {
 	int i = 5;
 	while (i < argc) {
 		if (is_valid_opt(argv[i]))
-			add_opt(argv[i], program_data);
+			if (!add_opt(argv[i], program_data)) return (FAILURE);
 		i++;
 	}
 	return (SUCCESS);
@@ -107,7 +120,7 @@ static int format_mac_addresses(char **argv, prog_data_t *program_data) {
 	const char *raw_src_mac = argv[2], 
 				*raw_trgt_mac = argv[4];
 
-	if (program_data->options.verbose) 
+	if (program_data->options.verbose && !has_signal) 
 		printf(STARTMACFORM);
 
 	if (!is_mac_valid(raw_src_mac, raw_trgt_mac))
@@ -115,7 +128,7 @@ static int format_mac_addresses(char **argv, prog_data_t *program_data) {
 
 	fill_prog_data(raw_src_mac, raw_trgt_mac, program_data);
 
-	if (program_data->options.verbose) {
+	if (program_data->options.verbose && !has_signal) {
 		printf(MACFORM, 
 				program_data->args.dec_src_mac, program_data->args.dec_src_mac,
 				program_data->args.dec_trgt_mac, program_data->args.dec_trgt_mac);
@@ -135,7 +148,7 @@ static int get_addr_infos(char *src_ip, char *trgt_ip,
 		fprintf(stderr, EBADIP, src_ip);
 		return (FAILURE);
 	}
-
+	
 	if (getaddrinfo(trgt_ip, 0, hints, trgt_info)) {
 		fprintf(stderr, EBADIP, trgt_ip);
 		freeaddrinfo(*src_info);
@@ -156,13 +169,12 @@ static int convert_possible_hostname(char *src_ip, char *trgt_ip, prog_args_t *a
 	while (ptr) {
 
 		if (ptr->ai_family == AF_INET) {
-
+			
 			struct sockaddr_in *ipv4 = (struct sockaddr_in *)ptr->ai_addr;
 			if (!inet_ntop(AF_INET, &(ipv4->sin_addr), buffer, sizeof(buffer))) {
 				fprintf (stderr, ENTOP);
 				return (FAILURE);
 			}
-
 			src_done ? ft_strcpy((char *)args->trgt_ipv4, buffer) : ft_strcpy((char *)args->src_ipv4, buffer);
 			bzero_data(buffer, IP_MAX_LEN);
 
@@ -194,11 +206,11 @@ static int are_private_ips(const char *src_ip, const char *trgt_ip) {
 		i++;
 	}
 	if (!src_is_valid) {
-		printf((ft_strcmp(src_ip, LOCALHOST) ? WHYLOCAL : WHYPUBLIC), src_ip);
+		printf((ft_strcmp(src_ip, LOCALHOST) ? WHYLOCAL : WHY), src_ip);
 		return (FAILURE);
 	}
 	if (!trgt_is_valid) {
-		printf((ft_strcmp(trgt_ip, LOCALHOST) ? WHYLOCAL : WHYPUBLIC), trgt_ip);
+		printf((ft_strcmp(trgt_ip, LOCALHOST) ? WHYLOCAL : WHY), trgt_ip);
 		return (FAILURE);
 	}
 	return (SUCCESS);
@@ -208,13 +220,13 @@ static int is_valid_address(char **argv, prog_data_t *program_data) {
 	const char *src_ip = (const char *)program_data->args.src_ipv4;
 	const char *trgt_ip = (const char *)program_data->args.trgt_ipv4;
 
-	if (program_data->options.verbose) {
+	if (program_data->options.verbose && !has_signal) {
 
 		if (!ft_strcmp(src_ip, argv[1]))
-			printf(HOSTTOIPSRC, argv[1], src_ip);
+			printf(RESOLVIPSRC, argv[1], src_ip);
 
 		if (!ft_strcmp(trgt_ip, argv[3]))
-			printf(HOSTTOIPTRGT, argv[3], trgt_ip);
+			printf(RESOLVIPTRGT, argv[3], trgt_ip);
 	}
 	if (!are_private_ips(src_ip, trgt_ip)) {
 		return (FAILURE);
@@ -226,7 +238,7 @@ static int format_ip_addresses(char **argv, prog_data_t *program_data) {
 	char *raw_src_ip = argv[1];
 	char *raw_trgt_ip = argv[3];
 
-	if (program_data->options.verbose)
+	if (program_data->options.verbose && !has_signal)
 		printf(STARTIPFORM);
 
 	if (!convert_possible_hostname(raw_src_ip, raw_trgt_ip, &(program_data->args)))
@@ -238,7 +250,7 @@ static int format_ip_addresses(char **argv, prog_data_t *program_data) {
 	program_data->args.dec_src_ip = inet_addr((char *)program_data->args.src_ipv4);
 	program_data->args.dec_trgt_ip = inet_addr((char *)program_data->args.trgt_ipv4);
 
-	if (program_data->options.verbose) {
+	if (program_data->options.verbose && !has_signal) {
 		printf(VALID_IPS);
 		printf(IPFORM, 
 			program_data->args.src_ipv4, program_data->args.dec_src_ip, 
@@ -252,8 +264,70 @@ static int parse_input(int argc, char **argv, prog_data_t *program_data) {
 		return (FAILURE);
 	if (!format_mac_addresses(argv, program_data))
 		return (FAILURE);
+	printf(SMACADDR);
 	if (!format_ip_addresses(argv, program_data))
 		return (FAILURE);
+	printf(SIPADDR);
+	return (SUCCESS);
+}
+
+int get_interface_priority(struct ifaddrs *ifa) {
+	if (ft_strncmp(ifa->ifa_name, "eth", 3) || ft_strncmp(ifa->ifa_name, "enp", 3)) return 3;
+	if (ft_strncmp(ifa->ifa_name, "wlan", 4) || ft_strncmp(ifa->ifa_name, "wlp", 3)) return 2;
+
+	return 1;
+}
+
+int is_basic_valid(struct ifaddrs *ifa) {	
+	if (!ifa || !ifa->ifa_name) return (FAILURE);
+		
+	
+	if (!(ifa->ifa_flags & IFF_UP)) return (FAILURE);		
+	if (!(ifa->ifa_flags & IFF_RUNNING)) return (FAILURE);   
+	if (ifa->ifa_flags & IFF_LOOPBACK) return (FAILURE);	 
+
+	if (!ifa->ifa_addr) return (FAILURE);
+	if (ifa->ifa_addr->sa_family != AF_INET) return (FAILURE);
+
+	struct sockaddr_in *addr_in = (struct sockaddr_in*)ifa->ifa_addr;
+	if (addr_in->sin_addr.s_addr == 0) return (FAILURE);
+	
+	if (ft_strncmp(ifa->ifa_name, "docker", 6) == 1) return (FAILURE);
+	if (ft_strncmp(ifa->ifa_name, "veth", 4) == 1) return (FAILURE);
+	if (ft_strncmp(ifa->ifa_name, "br-", 3) == 1) return (FAILURE);
+	if (ft_strncmp(ifa->ifa_name, "virbr", 5) == 1) return (FAILURE);
+	if (ft_strcmp(ifa->ifa_name, "lo") == 1) return (FAILURE);
+		
+	return (SUCCESS); 
+}
+
+int find_valid_interface(prog_data_t *program_data) {
+	struct ifaddrs *ifaddr, *ifa;
+	int priority = 0;
+
+	if (ft_strlen(program_data->args.interface))
+		return (SUCCESS);
+	if (getifaddrs(&ifaddr) == -1) {
+		fprintf(stderr, EIFADDR);
+		return (FAILURE);
+	}
+		
+	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+		if (!is_basic_valid(ifa)) continue;
+		
+		int current_priority = get_interface_priority(ifa);
+		if (current_priority > priority) {
+			priority = current_priority;
+			ft_strcpy(program_data->args.interface, ifa->ifa_name);
+		}
+	}
+	freeifaddrs(ifaddr);
+	if (!ft_strlen(program_data->args.interface)) {
+		fprintf(stderr, EINOTFND);
+		return (FAILURE);
+	} else {
+		printf(SINFND, program_data->args.interface);
+	}
 	return (SUCCESS);
 }
 
@@ -262,6 +336,8 @@ int init_program(int argc, char **argv, prog_data_t *program_data) {
 	bzero_data(program_data, sizeof(prog_data_t));
 
 	if (!parse_input(argc, argv, program_data))
+		return (FAILURE);
+	if (!find_valid_interface(program_data))
 		return (FAILURE);
 	return (SUCCESS);
 }

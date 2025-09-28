@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <strings.h>
+#include <arpa/inet.h>
 
 #include "def.h"
 #include "global_utils.h"
@@ -21,11 +22,6 @@ int ft_strlen(const char *s) {
 	while (s[len])
 		len++;
 	return (len);
-}
-
-void print_verbose(prog_data_t *program_data, char *message) {
-	if (program_data->options.verbose)
-		fprintf(stderr, "%s", message);
 }
 
 void bzero_data(void *program_data, size_t size) {

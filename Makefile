@@ -1,10 +1,11 @@
 CC = cc
 
 UTILS = src/utils/global_utils.c \
+		src/utils/display.c \
 
 SRC = src/main.c \
 	  src/parsing/input.c \
-	  src/main_loop/main_loop.c
+	  src/main_loop/main_loop.c \
 
 INCLUDES = -I include/structs -I include/utils -I include/def -I include/input -I include/main_loop
 
