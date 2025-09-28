@@ -1,24 +1,35 @@
+NAME = ft_malcolm
 CC = cc
-
-UTILS = src/utils/global_utils.c \
-		src/utils/display.c \
-
-SRC = src/main.c \
-	  src/parsing/input.c \
-	  src/main_loop/main_loop.c \
-
+CFLAGS = -Wall -Wextra -Werror -g
 INCLUDES = -I include/structs -I include/utils -I include/def -I include/input -I include/main_loop
+OBJS_DIR = objs
 
-RED=\e[31m
-DEF=\e[0m
+SRCS =	src/main.c \
+		src/parsing/input.c \
+		src/main_loop/main_loop.c \
+		src/utils/global_utils.c \
+		src/utils/display.c
 
-all:
-	@echo "${RED}\nWARNING WERROR IS NOT SET AND -w IS SET${DEF}\n";
-	gcc -g -Wall -Wextra  ${INCLUDES} $(UTILS) $(SRC) -o ft_malcolm
+OBJS = $(SRCS:src/%.c=$(OBJS_DIR)/%.o)
 
-fclean:
-	rm -f ft_malcolm
+all: $(NAME)
+
+$(NAME): $(OBJS_DIR) $(OBJS)
+	$(CC) $(OBJS) -o $(NAME)
+
+$(OBJS_DIR):
+	mkdir -p $(OBJS_DIR)
+
+$(OBJS_DIR)/%.o: src/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+clean:
+	rm -rf $(OBJS_DIR)
+
+fclean: clean
+	rm -f $(NAME)
 
 re: fclean all
 
-.PHONY: all flcean re
+.PHONY: all clean fclean re
