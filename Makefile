@@ -22,7 +22,7 @@ $(OBJS_DIR):
 
 $(OBJS_DIR)/%.o: src/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) -c src/$*.c -o $(OBJS_DIR)/$*.o
 
 clean:
 	rm -rf $(OBJS_DIR)
