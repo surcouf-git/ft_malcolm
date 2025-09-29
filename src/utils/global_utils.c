@@ -54,7 +54,7 @@ void ft_strcpy(char *s1, char *s2) {
 void ft_ustrcpy(uint8_t *s1, const uint8_t *s2) {
 	if (!s2)
 		return ;
-	for (int i = 0; s2[i]; i++)
+	for (int i = 0; i < 6; i++)
 		s1[i] = s2[i];
 }
 

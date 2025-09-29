@@ -59,7 +59,7 @@ void build_body(ethframe_t *frame, prog_data_t *program_data, uint16_t type) {
 	} else {
 		target = program_data->args.src_ipv4;
 		destination = program_data->args.src_mac_tab;
-		sprintf (buffer, "+ %s is at %2X:%2X:%2X:%2X:%2X:%2X ", target,
+		sprintf (buffer, "+ %s is at %.2X:%.2X:%.2X:%.2X:%.2X:%.2X ", target,
 					destination[0], destination[1], destination[2], destination[3], destination[4], destination[5]);
 	}
 
@@ -71,7 +71,7 @@ void build_body(ethframe_t *frame, prog_data_t *program_data, uint16_t type) {
 
 	bzero_data(buffer, 1024);
 	ptr = frame->arp.sender_hw_addr;
-	sprintf(buffer, "+ Sender MAC addess: %2X:%2X:%2X:%2X:%2X:%2X ", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
+	sprintf(buffer, "+ Sender MAC addess: %.2X:%.2X:%.2X:%.2X:%.2X:%.2X ", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
 	printf("%s", buffer);
 
 	fill_empty_space((MAX_SIZE - 1) - ft_strlen(buffer));
@@ -87,7 +87,7 @@ void build_body(ethframe_t *frame, prog_data_t *program_data, uint16_t type) {
 
 	bzero_data(buffer, 1024);
 	ptr = frame->arp.target_hw_addr;
-	sprintf(buffer, "+ Target MAC addess: %2X:%2X:%2X:%2X:%2X:%2X ", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
+	sprintf(buffer, "+ Target MAC addess: %.2X:%.2X:%.2X:%.2X:%.2X:%.2X ", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
 	printf("%s", buffer);
 
 	fill_empty_space((MAX_SIZE - 1) - ft_strlen(buffer));
@@ -130,13 +130,13 @@ void build_eth_header(ethframe_t *frame) {
 
 	bzero_data(buffer, 1024);
 	uint8_t *ptr = frame->destination;
-	sprintf(buffer, "+ Destination: %2X:%2X:%2X:%2X:%2X:%2X ", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
+	sprintf(buffer, "+ Destination: %.2X:%.2X:%.2X:%.2X:%.2X:%.2X ", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
 	printf("%s", buffer);
 	fill_empty_space((MAX_SIZE - 1) - ft_strlen(buffer));
 
 	bzero_data(buffer, 1024);
 	ptr = frame->source;
-	sprintf(buffer, "+ Source: %2X:%2X:%2X:%2X:%2X:%2X ", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
+	sprintf(buffer, "+ Source: %.2X:%.2X:%.2X:%.2X:%.2X:%.2X ", ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
 	printf("%s", buffer);
 	fill_empty_space((MAX_SIZE - 1) - ft_strlen(buffer));
 

@@ -31,9 +31,9 @@ extern int has_signal;
 //}
 
 int is_the_target(ethframe_t *source_frame, prog_data_t *program_data) {
-	if (ntohl(source_frame->arp.sender_pc_addr) == ntohl(program_data->args.dec_trgt_ip) \
+	if (source_frame->arp.sender_pc_addr == program_data->args.dec_trgt_ip \
 			&& ft_umac_cmp(source_frame->arp.sender_hw_addr, program_data->args.trgt_mac_tab) \
-				&& ntohl(source_frame->arp.target_pc_addr) == ntohl(program_data->args.dec_src_ip)) {
+				&& source_frame->arp.target_pc_addr == program_data->args.dec_src_ip) {
 
 		if (program_data->options.verbose && !has_signal)
 			printf(TRGTFOUND);
@@ -53,6 +53,8 @@ void build_eth_hdr(ethframe_t *reply_frame, ethframe_t *source_frame, prog_data_
 }
 
 void build_arp_reply(arp_pckt_t *reply_arp_pckt, prog_data_t *program_data) {
+	bzero_data(reply_arp_pckt, sizeof(arp_pckt_t));
+
 	reply_arp_pckt->hardware_type = htons(ETH);
 	reply_arp_pckt->protocol_type = htons(ETH_P_IP);
 	reply_arp_pckt->hardware_len = BYTE_MAC_LEN;
@@ -75,29 +77,25 @@ void build_reply(ethframe_t *source_frame, prog_data_t *program_data) {
 
 	reply_frame.arp = reply_arp_pckt;
 	program_data->reply_frame = reply_frame;
-
-	if (program_data->options.verbose && !has_signal)
-		display_eth_frame(&reply_frame, program_data);
 }
 
 int send_reply(int sock, prog_data_t *program_data) {
-	const void *buf = &program_data->reply_frame;
+	void *buf = &program_data->reply_frame;
 
 	struct sockaddr_ll sockaddr;
 	
-	memset(&sockaddr, 0, sizeof(sockaddr));
+	bzero_data(&sockaddr, sizeof(struct sockaddr_ll));
 	sockaddr.sll_family = AF_PACKET;
 	sockaddr.sll_ifindex = if_nametoindex(program_data->args.interface);
 	sockaddr.sll_halen = ETH_ALEN;
-	sockaddr.sll_protocol = htons(ETH_P_ARP);
 
-	bind(sock, (struct sockaddr*)&sockaddr, sizeof(sockaddr));
-
-	ssize_t sent = sendto(sock, buf, sizeof(ethframe_t), 0, (struct sockaddr*)&sockaddr, sizeof(sockaddr));
+	errno = 0;
+	ssize_t sent = sendto(sock, buf, sizeof(ethframe_t), 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 	if (sent < 0) {
 		fprintf(stderr, "sendto(): %s\n", strerror(errno));
 		return (FAILURE);
 	}
+	display_eth_frame(&program_data->reply_frame, program_data);
 	printf(SSEND, program_data->args.trgt_ipv4);
 	return (SUCCESS);
 }
@@ -168,8 +166,8 @@ int main_loop(prog_data_t *program_data) {
 		return (FAILURE);
 	}
 
-	if (!bind_socket_to_interface(sock, program_data))
-		return (FAILURE);
+	// if (!bind_socket_to_interface(sock, program_data))
+	// 	return (FAILURE);
 
 	printf(WAITING);
 	while (!is_packet_found(sock, buffer, program_data)) {
