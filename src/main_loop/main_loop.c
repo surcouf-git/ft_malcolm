@@ -69,14 +69,8 @@ void build_arp_reply(arp_pckt_t *reply_arp_pckt, prog_data_t *program_data) {
 }
 
 void build_reply(ethframe_t *source_frame, prog_data_t *program_data) {
-	ethframe_t reply_frame;
-	arp_pckt_t reply_arp_pckt;
-
-	build_eth_hdr(&reply_frame, source_frame, program_data);
-	build_arp_reply(&reply_arp_pckt, program_data);
-
-	reply_frame.arp = reply_arp_pckt;
-	program_data->reply_frame = reply_frame;
+	build_eth_hdr(&program_data->reply_frame, source_frame, program_data);
+	build_arp_reply(&program_data->reply_frame.arp, program_data);
 }
 
 int send_reply(int sock, prog_data_t *program_data) {

@@ -334,6 +334,7 @@ int find_valid_interface(prog_data_t *program_data) {
 int init_program(int argc, char **argv, prog_data_t *program_data) {
 
 	bzero_data(program_data, sizeof(prog_data_t));
+	bzero_data(&program_data->reply_frame, sizeof(arp_pckt_t));
 
 	if (!parse_input(argc, argv, program_data))
 		return (FAILURE);

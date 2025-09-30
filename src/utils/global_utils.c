@@ -77,22 +77,9 @@ void ft_ustrncpy(uint8_t *dest, const uint8_t *src, size_t n) {
 int ft_umac_cmp(const uint8_t *s1, const uint8_t *s2) {
 	if (!s1 || !s2)
 		return (0);
-		
-	uint8_t bufs1[BYTE_MAC_LEN];
-	uint8_t bufs2[BYTE_MAC_LEN];
-		
-	ft_ustrncpy(bufs1, s1, BYTE_MAC_LEN);
-	ft_ustrncpy(bufs2, s2, BYTE_MAC_LEN);
-		
-	for (int i = 0; i < BYTE_MAC_LEN; i++) {
-		if (bufs1[i] >= 'a' && bufs1[i] <= 'f')
-			bufs1[i] = bufs1[i] - 32;
-		if (bufs2[i] >= 'a' && bufs2[i] <= 'f')
-			bufs2[i] = bufs2[i] - 32;
-	}
 
 	for (int i = 0; i < BYTE_MAC_LEN; i++) {
-		if (bufs1[i] != bufs2[i])
+		if (s1[i] != s2[i])
 			return (0);
 	}
 	return (1);
